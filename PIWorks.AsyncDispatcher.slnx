@@ -1,4 +1,6 @@
 <Solution>
-  <Project Path="MiniStock.Api/MiniStock.Api.csproj" Id="a9f22df4-25bd-4700-8db7-5a6c147e2dc3" />
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
   <Project Path="PIWorks.AsyncDispatcher.Core/PIWorks.AsyncDispatcher.Core.csproj" />
 </Solution>
