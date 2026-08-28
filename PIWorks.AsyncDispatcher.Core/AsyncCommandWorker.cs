@@ -14,14 +14,16 @@ namespace PIWorks.AsyncDispatcher.Core
         private readonly ICommandTracker<TKey> _tracker;
         private readonly IServiceScopeFactory _serviceScopeFactory;
 
-        public AsyncCommandWorker(ICommandBus<TKey> commandBus, ICommandTracker<TKey> tracker, IServiceScopeFactory serviceScopeFactory)
+        private readonly ICommandCancellationManager<TKey> _cancellationManager;
+        public AsyncCommandWorker(ICommandBus<TKey> commandBus, ICommandTracker<TKey> tracker, IServiceScopeFactory serviceScopeFactory, ICommandCancellationManager<TKey> cancellationManager)
         {
             _commandBus = commandBus;
             _tracker = tracker;
             _serviceScopeFactory = serviceScopeFactory;
+            _cancellationManager = cancellationManager;
         }
 
-       
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
@@ -29,42 +31,39 @@ namespace PIWorks.AsyncDispatcher.Core
 
                 var envelope = await _commandBus.DequeueAsync(stoppingToken);
                 await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Running);
+
                 using var scope = _serviceScopeFactory.CreateScope();
 
-                Type handlerType = typeof(IAsyncCommandHandler<,>).MakeGenericType(envelope.Command.GetType(), typeof(TKey));//?
-                dynamic handler = scope.ServiceProvider.GetRequiredService(handlerType);
-
-
-
+                var jobToken = _cancellationManager.RegisterCommand(envelope.CommandId);
                 try
                 {
-                    await handler.ExecuteAsync((dynamic)envelope.Command, stoppingToken);
 
+                    await envelope.ExecuteAsync(scope.ServiceProvider, jobToken);
                     await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Finished);
                 }
-
                 catch (OperationCanceledException)
                 {
-                    await handler.HandleAsyncOperationCancellation(envelope.Command);
-                    await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Error, "The process has been cancelled.");
 
+                    await envelope.HandleCancellationAsync(scope.ServiceProvider);
+                    await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Error, "The process has been cancelled.");
                 }
                 catch (Exception ex)
                 {
-                    await handler.HandleAsyncOperationFailure(envelope.Command, ex);
-
+                    await envelope.HandleFailureAsync(scope.ServiceProvider, ex);
                     await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Error, ex.Message);
-                    //biz hanlderda hata türeri belirtmiştik ona göre düzenleyeceğim...
+
+                }
+                finally
+                {
+                    _cancellationManager.Remove(envelope.CommandId);
+
                 }
 
-
             }
-
-
-
         }
     }
 }
+
 
        
         
