@@ -9,6 +9,8 @@ namespace PIWorks.AsyncDispatcher.Core
         Pending,
         Running,
         Finished,
-        Error
+        Error,
+        Cancelled,
+        Cancelling,
     }
 }

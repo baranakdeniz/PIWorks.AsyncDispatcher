@@ -8,16 +8,25 @@ namespace PIWorks.AsyncDispatcher.Core
 {
     public abstract class CommandEnvelope<TKey>
     {
-        public TKey CommandId { get; init; }
+        public TKey CommandId { get; }
+        protected CommandEnvelope(TKey commandId)
+        {
+            CommandId = commandId;
+        }
 
-        
         public abstract Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken);
         public abstract Task HandleCancellationAsync(IServiceProvider serviceProvider);
         public abstract Task HandleFailureAsync(IServiceProvider serviceProvider, Exception ex);
     } 
     public class CommandEnvelope<TCommand,TKey> : CommandEnvelope<TKey> where TCommand : IAsyncCommand<TKey>
     {
-        public TCommand Command { get; init; }
+        public TCommand Command { get; }
+
+        public CommandEnvelope(TCommand command) : base(command.Key)
+        {
+            ArgumentNullException.ThrowIfNull(command);
+            Command = command;
+        }
 
         public override async Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken)
         {
@@ -30,7 +39,7 @@ namespace PIWorks.AsyncDispatcher.Core
         public override async Task HandleCancellationAsync(IServiceProvider serviceProvider)
         {
             var handler = serviceProvider.GetRequiredService<IAsyncCommandHandler<TCommand, TKey>>();
-            if (handler is ICancellationHandler<TCommand> cancelHandler)
+            if (handler is IAsyncCommandHandler<TCommand, TKey>.ICancellationHandler cancelHandler)
             {
                 await cancelHandler.HandleAsyncOperationCancellation(Command);
             }
@@ -39,7 +48,7 @@ namespace PIWorks.AsyncDispatcher.Core
         public override async Task HandleFailureAsync(IServiceProvider serviceProvider, Exception ex)
         {
             var handler = serviceProvider.GetRequiredService<IAsyncCommandHandler<TCommand, TKey>>();
-            if (handler is IFailureHandler<TCommand> failureHandler)
+            if (handler is IAsyncCommandHandler<TCommand, TKey>.IFailureHandler failureHandler)
             {
                 await failureHandler.HandleAsyncOperationFailure(Command, ex);
             }

@@ -8,6 +8,14 @@ namespace PIWorks.AsyncDispatcher.Core.Abstracts
         where TCommand :IAsyncCommand<TKey> 
     {
         Task ExecuteAsync(TCommand command, CancellationToken cancellationToken);
+        public interface IFailureHandler
+        {
+            Task HandleAsyncOperationFailure(TCommand command, Exception ex);
+        }
 
-}
+        public interface ICancellationHandler
+        {
+            Task HandleAsyncOperationCancellation(TCommand command);
+        }
+    }
 }

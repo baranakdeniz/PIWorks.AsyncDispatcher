@@ -15,14 +15,15 @@ namespace PIWorks.AsyncDispatcher.Core
             _scopeFactory = scopeFactory;
             _commandBus = commandBus;
         }
-        public async Task<TKey> EnqueueAsync<TCommand>(TCommand command, TKey trackingNumber) where TCommand : IAsyncCommand<TKey>
+        public virtual async Task<TKey> EnqueueAsync<TCommand>(TCommand command) where TCommand : IAsyncCommand<TKey>
         { 
             var envelope = new CommandEnvelope<TCommand, TKey>
             {
-              Command = command
+                CommandId = command.Key,
+                Command = command
             };
            await _commandBus.EnqueueAsync(envelope);
-            return trackingNumber;//inşAllah AHmet abinin dediği yapı budur sor ona?
+            return command.Key;//inşAllah AHmet abinin dediği yapı budur sor ona?
 
         }
 
@@ -33,7 +34,7 @@ namespace PIWorks.AsyncDispatcher.Core
             var handler = scope.ServiceProvider.GetRequiredService<ISyncCommandHandler<TCommand, TKey>>();
 
            await  handler.Execute(command, cancellationToken);
-            //scope.Dispose(); koymam lazım mı ? otomatik siler mi ? 
+          
 
         }
     }

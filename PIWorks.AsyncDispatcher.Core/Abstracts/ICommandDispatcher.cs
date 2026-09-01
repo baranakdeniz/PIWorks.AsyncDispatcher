@@ -10,7 +10,7 @@ namespace PIWorks.AsyncDispatcher.Core.Abstracts
         Task Execute<TCommand>(TCommand command, CancellationToken cancellationToken) where TCommand : ISyncCommand<TKey>;
 
         //async request
-        Task<TKey> EnqueueAsync<TCommand>(TCommand command, TKey trackingNumber) where TCommand : IAsyncCommand<TKey>;
+        Task<TKey> EnqueueAsync<TCommand>(TCommand command) where TCommand : IAsyncCommand<TKey>;
 
 
        
