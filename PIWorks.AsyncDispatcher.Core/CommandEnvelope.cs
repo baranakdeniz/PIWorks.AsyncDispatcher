@@ -14,7 +14,7 @@ namespace PIWorks.AsyncDispatcher.Core
             CommandId = commandId;
         }
 
-        public abstract Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken);
+        public abstract Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken);//neden her birinde serviceproiver var ?
         public abstract Task HandleCancellationAsync(IServiceProvider serviceProvider);
         public abstract Task HandleFailureAsync(IServiceProvider serviceProvider, Exception ex);
     } 

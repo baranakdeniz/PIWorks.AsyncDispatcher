@@ -12,8 +12,6 @@ namespace PIWorks.AsyncDispatcher.Core
         private readonly ConcurrentDictionary<TKey, CommandStateInfo> _states = new();
 
 
-
-
         public Task<CommandStateInfo?> GetStatusAsync(TKey commandId)
         {
            if(_states.TryGetValue(commandId, out var state))

@@ -27,7 +27,7 @@ namespace PIWorks.AsyncDispatcher.Core
         public virtual async Task CancelAsync(TKey commandId, CancellationToken cancellationToken = default)
         {
            await _commandTracker.UpdateStatusAsync(commandId, CommandStatus.Cancelling);
-            await _eventPublisher.PublishCancelEventAsync(commandId, cancellationToken);
+            await _eventPublisher.PublishCancelAsync(commandId, cancellationToken);
         }
 
     
