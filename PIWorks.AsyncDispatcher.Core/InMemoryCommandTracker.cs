@@ -11,7 +11,6 @@ namespace PIWorks.AsyncDispatcher.Core
 
         private readonly ConcurrentDictionary<TKey, CommandStateInfo> _states = new();
 
-
         public Task<CommandStateInfo?> GetStatusAsync(TKey commandId)
         {
            if(_states.TryGetValue(commandId, out var state))
@@ -48,7 +47,12 @@ namespace PIWorks.AsyncDispatcher.Core
             return Task.CompletedTask;
         }
 
-       
+        public Task<int> GetRunningCommandsCountAsync()
+        {
+            return Task.FromResult(_states.Count(x => x.Value.Status == CommandStatus.Running));
+        }
+
+
     }
 
         //private readonly ConcurrentDictionary<TKey, CommandStateInfo> _store = new();

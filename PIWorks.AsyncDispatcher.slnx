@@ -3,4 +3,5 @@
     <File Path="README.md" />
   </Folder>
   <Project Path="PIWorks.AsyncDispatcher.Core/PIWorks.AsyncDispatcher.Core.csproj" />
+  <Project Path="PIWorks.AsyncDispatcher.WebApi/PIWorks.AsyncDispatcher.WebApi.csproj" Id="320631e0-4a0c-4287-96cb-ecf925f00657" />
 </Solution>

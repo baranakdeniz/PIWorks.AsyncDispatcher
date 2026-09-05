@@ -1,0 +1,56 @@
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using PIWorks.AsyncDispatcher.Core;
+using PIWorks.AsyncDispatcher.Core.Abstracts;
+using PIWorks.AsyncDispatcher.WebApi.Commands;
+using System.ComponentModel.Design;
+
+namespace PIWorks.AsyncDispatcher.WebApi.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ReportsController : ControllerBase
+    {
+        private readonly IAsyncCommandDispatcher<Guid> _dispatcher;
+        private readonly ICommandTracker<Guid> _tracker;
+
+        public ReportsController(IAsyncCommandDispatcher<Guid> dispatcher, ICommandTracker<Guid> tracker)
+        {
+            _dispatcher = dispatcher;
+            _tracker = tracker;
+        }
+      
+        [HttpPost("generate")]
+        public async Task<IActionResult> Generate([FromBody] string reportName, CancellationToken cancellationToken = default)
+        {
+            var command = new GenerateReportCommand { ReportName = reportName };
+            await _dispatcher.EnqueueAsync(command, cancellationToken);
+            return Accepted(new { CommandId = command.Key , Status = "Pending" });//burada yazdığım swaggerda response body ile çıkıyor! 
+        }
+        [HttpPost("cancel/{id}")]
+        public async Task<IActionResult> Cancel(Guid id , CancellationToken cancellationToken = default)
+        {
+            try
+            {
+              await _dispatcher.CancelAsync(id, cancellationToken);
+           
+               return Accepted(new { Message = $"Command with ID {id} is being cancelled." });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { Message = $"Command with ID {id} not found." });
+            }
+
+            }
+
+        [HttpGet("running-count")]
+        public async Task<IActionResult> GetRunningCount()
+        {
+            var count = await _tracker.GetRunningCommandsCountAsync();
+            return Ok(new { RunningCommands = count });
+        }
+
+
+        }
+    }
+

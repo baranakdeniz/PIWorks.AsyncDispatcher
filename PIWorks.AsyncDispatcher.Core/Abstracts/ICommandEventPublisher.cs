@@ -4,9 +4,9 @@ using System.Text;
 
 namespace PIWorks.AsyncDispatcher.Core.Abstracts
 {
-    public interface ICommandEventPublisher //class bazlı generic kullanırsam kendimi kısıtlarım metod bazlı yaparsam herkes kendine göre!
+    public interface ICommandEventPublisher<TKey> //class bazlı generic kullanırsam kendimi kısıtlarım metod bazlı yaparsam herkes kendine göre!
     {
-        Task PublishCancelAsync<TKey>(TKey commandId, CancellationToken cancellationToken = default);
+        Task PublishCancelAsync(TKey commandId, CancellationToken cancellationToken = default);
 
     }
 }

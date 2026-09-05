@@ -4,7 +4,7 @@ using System.Text;
 
 namespace PIWorks.AsyncDispatcher.Core.Abstracts
 {
-    internal interface IAsyncCommandDispatcher<TKey>
+    public interface IAsyncCommandDispatcher<TKey>
     {
         Task EnqueueAsync<TCommand>(TCommand command, CancellationToken cancellationToken) where TCommand : IAsyncCommand<TKey>;
 

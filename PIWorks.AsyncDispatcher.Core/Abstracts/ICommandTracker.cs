@@ -11,5 +11,6 @@ namespace PIWorks.AsyncDispatcher.Core.Abstracts
         Task InitializeAsync(TKey commandId);
         Task UpdateStatusAsync(TKey commandId, CommandStatus status, string errorMessage = null);
         Task<CommandStateInfo?> GetStatusAsync(TKey commandId);
+        Task<int> GetRunningCommandsCountAsync();
     }
 }

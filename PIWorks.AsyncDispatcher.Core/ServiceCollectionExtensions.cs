@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using PIWorks.AsyncDispatcher.Core.Abstracts;
+using PIWorks.AsyncDispatcher.Core.Events;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,9 +16,11 @@ namespace PIWorks.AsyncDispatcher.Core
        
             services.AddSingleton<ICommandCancellationManager<TKey>, CommandCancellationManager<TKey>>();
 
+            services.AddTransient<INotificationHandler<CommandCancelledEvent<TKey>>, CommandCancellationEventConsumer<TKey>>();
+                                                                                                                               
+        
 
-          
-            services.AddTransient<ICommandEventPublisher, MediatRCommandEventPublisher<TKey>>();
+            services.AddTransient<ICommandEventPublisher<TKey>, MediatRCommandEventPublisher<TKey>>();
 
           
             services.AddSingleton<ICommandTracker<TKey>, InMemoryCommandTracker<TKey>>();

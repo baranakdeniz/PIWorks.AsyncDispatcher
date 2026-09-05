@@ -30,34 +30,38 @@ namespace PIWorks.AsyncDispatcher.Core
             {
 
                 var envelope = await _commandBus.DequeueAsync(stoppingToken);
-                await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Running);
 
-                using var scope = _serviceScopeFactory.CreateScope();
+                _ = Task.Run(async () =>
+                {                    
 
-                var jobToken = _cancellationManager.RegisterCommand(envelope.CommandId);
-                try
-                {
+                    using var scope = _serviceScopeFactory.CreateScope();
 
-                    await envelope.ExecuteAsync(scope.ServiceProvider, jobToken);
-                    await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Finished);
-                }
-                catch (OperationCanceledException)
-                {
+                    var jobToken = _cancellationManager.RegisterCommand(envelope.CommandId);
+                    try
+                    {
+                        await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Running);
+                        await envelope.ExecuteAsync(scope.ServiceProvider, jobToken);
+                        await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Finished);
+                    }
+                    catch (OperationCanceledException)
+                    {
 
-                    await envelope.HandleCancellationAsync(scope.ServiceProvider);
-                    await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Error, "The process has been cancelled.");
-                }
-                catch (Exception ex)
-                {
-                    await envelope.HandleFailureAsync(scope.ServiceProvider, ex);
-                    await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Error, ex.Message);
+                        await envelope.HandleCancellationAsync(scope.ServiceProvider);
+                        await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Cancelled, "The process has been cancelled.");
+                    }
+                    catch (Exception ex)
+                    {
+                        await envelope.HandleFailureAsync(scope.ServiceProvider, ex);
+                        await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Error, ex.Message);
 
-                }
-                finally
-                {
-                    _cancellationManager.Remove(envelope.CommandId);
+                    }
+                    finally
+                    {
+                        _cancellationManager.Remove(envelope.CommandId);
 
-                }
+                    }
+                }, stoppingToken);
+               
 
             }
         }

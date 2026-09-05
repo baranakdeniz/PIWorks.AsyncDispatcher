@@ -12,9 +12,11 @@ namespace PIWorks.AsyncDispatcher.Core
 
         public CancellationToken RegisterCommand(TKey commandId)
         {
-            var cts = new CancellationTokenSource();
-            _stores.TryAdd(commandId, cts);
-            return cts.Token; 
+            //var cts = new CancellationTokenSource();
+            //_stores.TryAdd(commandId, cts);
+            //return cts.Token; 
+            var cts = _stores.GetOrAdd(commandId, _ => new CancellationTokenSource());
+            return cts.Token;
         }
 
         public void Remove(TKey commandId)

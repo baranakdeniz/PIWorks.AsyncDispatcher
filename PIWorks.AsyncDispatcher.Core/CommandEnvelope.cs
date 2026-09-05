@@ -7,19 +7,19 @@ using System.Text;
 namespace PIWorks.AsyncDispatcher.Core
 {
     public abstract class CommandEnvelope<TKey>
-    {
+    {//double dispatch 1.dağıtım worker - > envelope
         public TKey CommandId { get; }
         protected CommandEnvelope(TKey commandId)
         {
             CommandId = commandId;
         }
 
-        public abstract Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken);//neden her birinde serviceproiver var ?
+        public abstract Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken);
         public abstract Task HandleCancellationAsync(IServiceProvider serviceProvider);
         public abstract Task HandleFailureAsync(IServiceProvider serviceProvider, Exception ex);
     } 
     public class CommandEnvelope<TCommand,TKey> : CommandEnvelope<TKey> where TCommand : IAsyncCommand<TKey>
-    {
+    {//double dispatch 2.dağıtım envelope -> handler
         public TCommand Command { get; }
 
         public CommandEnvelope(TCommand command) : base(command.Key)
