@@ -20,8 +20,9 @@ namespace PIWorks.AsyncDispatcher.WebApi.CommandHandlers
                 await Task.Delay(15000, cancellationToken);
         
             _logger.LogInformation("Finished executing GenerateReportCommand with Key: {Key}", command.Key);
+            
         }
-
+        
         public Task HandleAsyncOperationCancellation(GenerateReportCommand command)
         {
             _logger.LogWarning("Operation for GenerateReportCommand with Key: {Key} has been cancelled.", command.Key);

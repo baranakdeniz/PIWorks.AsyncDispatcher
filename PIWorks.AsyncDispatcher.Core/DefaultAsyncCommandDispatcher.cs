@@ -23,7 +23,7 @@ namespace PIWorks.AsyncDispatcher.Core
         public virtual async Task EnqueueAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default) where TCommand : IAsyncCommand<TKey>
         {
             var envelope = new CommandEnvelope<TCommand, TKey>(command);
-           await _commandTracker.UpdateStatusAsync(command.Key, CommandStatus.Pending);
+           await _commandTracker.UpdateStatusAsync(command.Key, CommandStatus.Pending, null);
             await _commandBus.EnqueueAsync(envelope, cancellationToken);
         }
     
@@ -42,7 +42,7 @@ namespace PIWorks.AsyncDispatcher.Core
                 return;
 
             }
-            await _commandTracker.UpdateStatusAsync(commandId, CommandStatus.Cancelling);
+            await _commandTracker.UpdateStatusAsync(commandId, CommandStatus.Cancelling, null);
             await _eventPublisher.PublishCancelAsync(commandId, cancellationToken);
         }
 

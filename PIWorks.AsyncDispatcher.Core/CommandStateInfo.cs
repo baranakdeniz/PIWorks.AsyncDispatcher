@@ -7,6 +7,7 @@ namespace PIWorks.AsyncDispatcher.Core
     public readonly struct CommandStateInfo
     {
         public CommandStatus Status { get; init; }
-        public string ErrorMessage { get; init; }
+        public string? WorkerId { get; init; } //Hangi instanceda çalıştığı bilgisi
+        public string? ErrorMessage { get; init; }
     }
 }

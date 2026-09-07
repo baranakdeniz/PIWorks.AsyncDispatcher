@@ -33,13 +33,14 @@ namespace PIWorks.AsyncDispatcher.Core
             return Task.CompletedTask;
         }
 
-        public Task UpdateStatusAsync(TKey commandId, CommandStatus status, string errorMessage = null)
+        public Task UpdateStatusAsync(TKey commandId, CommandStatus status,string? workerId, string errorMessage = null)
         {
          
             
             var newState = new CommandStateInfo
             {
                 Status = status,
+                WorkerId = workerId,
                 ErrorMessage = errorMessage
             };
 
