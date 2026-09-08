@@ -6,7 +6,7 @@ using System.Text;
 
 namespace PIWorks.AsyncDispatcher.Core
 {
-    internal class DefaultAsyncCommandDispatcher<TKey> : IAsyncCommandDispatcher<TKey>
+    public class DefaultAsyncCommandDispatcher<TKey> : IAsyncCommandDispatcher<TKey>
     {
         private readonly ICommandBus<TKey> _commandBus;
         private readonly ICommandTracker<TKey> _commandTracker;
@@ -23,7 +23,7 @@ namespace PIWorks.AsyncDispatcher.Core
         public virtual async Task EnqueueAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default) where TCommand : IAsyncCommand<TKey>
         {
             var envelope = new CommandEnvelope<TCommand, TKey>(command);
-           await _commandTracker.UpdateStatusAsync(command.Key, CommandStatus.Pending, null);
+            await _commandTracker.InitializeAsync(command.Key);
             await _commandBus.EnqueueAsync(envelope, cancellationToken);
         }
     

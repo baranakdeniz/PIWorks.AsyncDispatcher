@@ -53,8 +53,8 @@ namespace PIWorks.AsyncDispatcher.WebApi.Controllers
 
         [HttpGet("status/{id}")]
         public async Task<IActionResult> GetStatusId(Guid id)
-        {        
-            
+        {
+
             var status = await _tracker.GetStatusAsync(id);
 
             //try-catch yapamam çünkü commandstateinfoda "?" kullandım null geçebilir.
@@ -62,9 +62,9 @@ namespace PIWorks.AsyncDispatcher.WebApi.Controllers
             {
                 return NotFound(new { Message = $"Command with ID {id} not found." });
             }
-         
-            return Ok(new { Command = id, Status = status.Value.Status.ToString(), WorkerNode= status.Value.WorkerId });
-       }
+
+            return Ok(new { Command = id, Status = status.Value.Status.ToString(), WorkerNode = status.Value.WorkerId });
+        }
 
         }
     }

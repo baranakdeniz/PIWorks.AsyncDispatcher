@@ -26,6 +26,7 @@ namespace PIWorks.AsyncDispatcher.Core
             var initializeState = new CommandStateInfo
             {
                 Status = CommandStatus.Pending,
+                WorkerId = null,
                 ErrorMessage = null
             };
             _states.TryAdd(commandId, initializeState);

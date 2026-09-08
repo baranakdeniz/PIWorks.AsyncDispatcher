@@ -2,6 +2,7 @@
   <Folder Name="/Solution Items/">
     <File Path="README.md" />
   </Folder>
+  <Project Path="PIWorks.AsyncDispatcher.Core.Tests/PIWorks.AsyncDispatcher.Core.Tests.csproj" Id="7bbb9785-0a01-4416-8fd0-f95098f52d79" />
   <Project Path="PIWorks.AsyncDispatcher.Core/PIWorks.AsyncDispatcher.Core.csproj" />
   <Project Path="PIWorks.AsyncDispatcher.WebApi/PIWorks.AsyncDispatcher.WebApi.csproj" Id="320631e0-4a0c-4287-96cb-ecf925f00657" />
 </Solution>
