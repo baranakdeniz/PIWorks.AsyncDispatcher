@@ -17,7 +17,7 @@ namespace PIWorks.AsyncDispatcher.Core
         private readonly SemaphoreSlim semaphoreSlim = new SemaphoreSlim(5,5);
         private readonly string _workerId = $"{Environment.MachineName}-{Guid.NewGuid().ToString().Substring(0, 6)}";
 
-        public AsyncCommandWorker(ICommandBus<TKey> commandBus, ICommandTracker<TKey> tracker, IServiceScopeFactory serviceScopeFactory, ICommandCancellationManager<TKey> cancellationManager)
+        public AsyncCommandWorker(ICommandBus<TKey> commandBus, ICommandTracker<TKey> tracker, ICommandCancellationManager<TKey> cancellationManager1, IServiceScopeFactory serviceScopeFactory, ICommandCancellationManager<TKey> cancellationManager)
         {
             _commandBus = commandBus;
             _tracker = tracker;

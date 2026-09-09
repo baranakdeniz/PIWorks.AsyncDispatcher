@@ -17,7 +17,7 @@ namespace PIWorks.AsyncDispatcher.Core
             {
                 return Task.FromResult<CommandStateInfo?>(state);
             }
-
+            
             return Task.FromResult<CommandStateInfo?>(null);
         }
 

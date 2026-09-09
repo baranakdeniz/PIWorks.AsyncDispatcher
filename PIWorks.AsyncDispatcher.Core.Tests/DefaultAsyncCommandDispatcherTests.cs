@@ -18,7 +18,6 @@ namespace PIWorks.AsyncDispatcher.Core.Tests
     {
 
         // --- ENQUEUEASYNC TESTLERİ ---
-
         [Theory]
         [AutoMoqData]
         public async Task EnqueueAsync_ShouldInitializeAndEnqueueCommand(
@@ -62,13 +61,14 @@ namespace PIWorks.AsyncDispatcher.Core.Tests
         [Theory]
         [AutoMoqData]
         public async Task EnqueueAsync_ShouldNotEnqueueToBus_WhenInitializeThrowsException(
-            [Frozen] Mock<ICommandTracker<Guid>> mockTracker,
+        [Frozen] Mock<ICommandTracker<Guid>> mockTracker,
             [Frozen] Mock<ICommandBus<Guid>> mockBus,
             DefaultAsyncCommandDispatcher<Guid> sut,
             DummyCommand command)
         {
-            mockTracker.Setup(t => t.InitializeAsync(command.Key))
-                        .ThrowsAsync(new InvalidOperationException("Database connection failed"));
+  
+                mockTracker.Setup(t => t.InitializeAsync(command.Key))
+                            .ThrowsAsync(new InvalidOperationException("Database connection failed"));
 
             await Assert.ThrowsAsync<InvalidOperationException>(() => sut.EnqueueAsync(command));
 
@@ -171,7 +171,7 @@ namespace PIWorks.AsyncDispatcher.Core.Tests
 
         //        await _sut.EnqueueAsync(command, cancellationToken);
 
-        //        _mockTracker.Verify(t => t.InitializeAsync(command.Key), Times.Once);
+        //       _mockTracker.Verify(t => t.InitializeAsync(command.Key), Times.Once);
         //        _mockBus.Verify(b => b.EnqueueAsync(It.IsAny<CommandEnvelope<DummyCommand, Guid>>(), cancellationToken), Times.Once);
         //    }
 
