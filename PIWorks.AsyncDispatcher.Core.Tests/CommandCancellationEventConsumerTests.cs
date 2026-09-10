@@ -8,7 +8,7 @@ using System.Text;
 
 namespace PIWorks.AsyncDispatcher.Core.Tests
 {
-    public class CommandCancellationEventConsumer
+    public class CommandCancellationEventConsumerTests
     {
         [Theory]
         [AutoMoqData]
