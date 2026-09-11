@@ -63,12 +63,13 @@ namespace PIWorks.AsyncDispatcher.Core.Tests
                 // 3. Assert
                 mockBus.Verify(b => b.DequeueAsync(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
                 mockHandler.Verify(h => h.ExecuteAsync(It.IsAny<DummyCommand>(), It.IsAny<CancellationToken>()), Times.Once);
-                mockTracker.Verify(t => t.UpdateStatusAsync(
-                    envelope.CommandId,
-                    CommandStatus.Running,
-                    It.IsAny<string>()),
-                    Times.Once);
-            }
+            mockTracker.Verify(t => t.UpdateStatusAsync(
+               envelope.CommandId,
+               CommandStatus.Running,
+               It.IsAny<string?>(),           
+               It.IsAny<string>()),           
+               Times.Once);
+        }
         [Theory]
         [AutoMoqData]
         public async Task ExecuteAsync_ShouldUpdateStatusToFinishedAndCleanup_WhenCommandSucceeds(
@@ -109,7 +110,12 @@ namespace PIWorks.AsyncDispatcher.Core.Tests
             await handlerCompleted.Task.WaitAsync(TimeSpan.FromSeconds(2));
 
             // Assert
-            mockTracker.Verify(t => t.UpdateStatusAsync(envelope.CommandId, CommandStatus.Finished, It.IsAny<string>()), Times.Once);
+            mockTracker.Verify(t => t.UpdateStatusAsync(
+      envelope.CommandId,
+      CommandStatus.Finished,
+      It.IsAny<string?>(),          
+      It.IsAny<string>()),          
+      Times.Once);
             mockCancellationManager.Verify(c => c.Remove(envelope.CommandId), Times.Once);
         }
         [Theory]
@@ -195,11 +201,15 @@ namespace PIWorks.AsyncDispatcher.Core.Tests
             mockServiceScope.Setup(s => s.ServiceProvider).Returns(mockProvider.Object);
             mockScopeFactory.Setup(f => f.CreateScope()).Returns(mockServiceScope.Object);
 
-        
+
             mockTracker
-                .Setup(t => t.UpdateStatusAsync(envelope.CommandId, CommandStatus.Cancelled, It.IsAny<string>()))
-                .Returns(Task.CompletedTask)
-                .Callback(() => cancelLogged.TrySetResult(true));
+    .Setup(t => t.UpdateStatusAsync(
+        envelope.CommandId,
+        CommandStatus.Cancelled,
+        It.IsAny<string?>(),       
+        It.IsAny<string>()))
+         .Returns(Task.CompletedTask)
+        .Callback(() => cancelLogged.TrySetResult(true));
 
             mockBus
                 .SetupSequence(b => b.DequeueAsync(It.IsAny<CancellationToken>()))
@@ -214,10 +224,11 @@ namespace PIWorks.AsyncDispatcher.Core.Tests
 
             // Assert
             mockTracker.Verify(t => t.UpdateStatusAsync(
-                envelope.CommandId,
-                CommandStatus.Cancelled,
-                It.IsAny<string>()),
-                Times.Once);
+    envelope.CommandId,
+    CommandStatus.Cancelled,
+    It.IsAny<string?>(),           
+    It.IsAny<string>()),           
+    Times.Once);
 
             mockCancellationManager.Verify(c => c.Remove(envelope.CommandId), Times.Once);
         }

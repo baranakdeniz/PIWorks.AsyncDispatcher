@@ -108,7 +108,12 @@ namespace PIWorks.AsyncDispatcher.Core.Tests
 
             await sut.CancelAsync(commandId);
 
-            mockTracker.Verify(t => t.UpdateStatusAsync(It.IsAny<Guid>(), It.IsAny<CommandStatus>(), It.IsAny<string>()), Times.Never);
+            mockTracker.Verify(t => t.UpdateStatusAsync(
+     It.IsAny<Guid>(),
+     It.IsAny<CommandStatus>(),
+     It.IsAny<string?>(),
+     It.IsAny<string?>()),
+     Times.Never);
             mockPublisher.Verify(p => p.PublishCancelAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
@@ -127,7 +132,12 @@ namespace PIWorks.AsyncDispatcher.Core.Tests
 
             await sut.CancelAsync(commandId);
 
-            mockTracker.Verify(t => t.UpdateStatusAsync(commandId, CommandStatus.Cancelling, null), Times.Once);
+            mockTracker.Verify(t => t.UpdateStatusAsync(
+    commandId,
+    CommandStatus.Cancelling,
+    null,
+    null),
+    Times.Once);
             mockPublisher.Verify(p => p.PublishCancelAsync(commandId, It.IsAny<CancellationToken>()), Times.Once);
         }
     }

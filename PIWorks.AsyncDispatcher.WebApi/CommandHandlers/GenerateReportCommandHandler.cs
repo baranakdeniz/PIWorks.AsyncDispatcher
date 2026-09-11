@@ -30,4 +30,3 @@ namespace PIWorks.AsyncDispatcher.WebApi.CommandHandlers
         }
     }
 }
-//EN BAŞTA HANDLER MI BAŞLIOR ? 

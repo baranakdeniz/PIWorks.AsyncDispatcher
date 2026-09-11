@@ -12,6 +12,7 @@ namespace PIWorks.AsyncDispatcher.Core
         private readonly ICommandTracker<TKey> _commandTracker;
         private readonly ICommandEventPublisher<TKey> _eventPublisher;
         private readonly ILogger<DefaultAsyncCommandDispatcher<TKey>> _logger;
+      
 
         public DefaultAsyncCommandDispatcher(ICommandBus<TKey> commandBus, ICommandTracker<TKey> commandTracker, ICommandEventPublisher<TKey> eventPublisher, ILogger<DefaultAsyncCommandDispatcher<TKey>> logger)
         {
@@ -22,6 +23,7 @@ namespace PIWorks.AsyncDispatcher.Core
         }  
         public virtual async Task EnqueueAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default) where TCommand : IAsyncCommand<TKey>
         {
+         
             var envelope = new CommandEnvelope<TCommand, TKey>(command);
             await _commandTracker.InitializeAsync(command.Key);
             await _commandBus.EnqueueAsync(envelope, cancellationToken);
