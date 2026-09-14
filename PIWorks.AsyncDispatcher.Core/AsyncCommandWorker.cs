@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PIWorks.AsyncDispatcher.Core.Abstracts;
+using PIWorks.AsyncDispatcher.Core.Events;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,15 +15,17 @@ namespace PIWorks.AsyncDispatcher.Core
         private readonly ICommandTracker<TKey> _tracker;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ICommandCancellationManager<TKey> _cancellationManager;
+        private readonly ICommandEventPublisher _eventPublisher;
         private readonly SemaphoreSlim semaphoreSlim = new SemaphoreSlim(5,5);
         private readonly string _workerId = $"{Environment.MachineName}-{Guid.NewGuid().ToString().Substring(0, 6)}";
 
-        public AsyncCommandWorker(ICommandBus<TKey> commandBus, ICommandTracker<TKey> tracker, ICommandCancellationManager<TKey> cancellationManager, IServiceScopeFactory serviceScopeFactory)
+        public AsyncCommandWorker(ICommandBus<TKey> commandBus, ICommandTracker<TKey> tracker, ICommandCancellationManager<TKey> cancellationManager, IServiceScopeFactory serviceScopeFactory , ICommandEventPublisher eventpublisher)
         {
             _commandBus = commandBus;
             _tracker = tracker;
             _serviceScopeFactory = serviceScopeFactory;
             _cancellationManager = cancellationManager;
+            _eventPublisher = eventpublisher;
         }
 
 
@@ -43,20 +46,20 @@ namespace PIWorks.AsyncDispatcher.Core
                     var jobToken = _cancellationManager.RegisterCommand(envelope.CommandId);
                     try
                     {
-                        await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Running, _workerId);
+                        await _eventPublisher.PublishAsync(new CommandRunningEvent<TKey>(envelope.CommandId, "ProductA", _workerId));
                         await envelope.ExecuteAsync(scope.ServiceProvider, jobToken);
-                        await _tracker.UpdateStatusAsync(envelope.CommandId,CommandStatus.Finished, _workerId);
+                        await _eventPublisher.PublishAsync(new CommandFinishedEvent<TKey>(envelope.CommandId, "ProductA", _workerId));
                     }
                     catch (OperationCanceledException)
                     {
 
                         await envelope.HandleCancellationAsync(scope.ServiceProvider);
-                        await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Cancelled, _workerId);
+                        await _eventPublisher.PublishAsync(new CommandCancelledEvent<TKey>(envelope.CommandId, "ProductA", _workerId));
                     }
                     catch (Exception ex)
                     {
                         await envelope.HandleFailureAsync(scope.ServiceProvider, ex);
-                        await _tracker.UpdateStatusAsync(envelope.CommandId, CommandStatus.Error, _workerId, ex.Message);
+                        await _eventPublisher.PublishAsync(new CommandErrorEvent<TKey>(envelope.CommandId, "ProductA", _workerId, ex.Message));
                     }
                     finally
                     {

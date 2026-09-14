@@ -8,7 +8,7 @@ using System.Text;
 
 namespace PIWorks.AsyncDispatcher.Core
 {
-    public class MediatRCommandEventPublisher<TKey> : ICommandEventPublisher<TKey>
+    public class MediatRCommandEventPublisher : ICommandEventPublisher
     {
         //burada benim publish(broadcast) yapmam lazım ki consumerlar dinleyebilsin. 
         private readonly IPublisher _mediator;
@@ -17,10 +17,11 @@ namespace PIWorks.AsyncDispatcher.Core
         {
             _mediator = mediator;
         }
-        public Task PublishCancelAsync(TKey commandId , CancellationToken cancellationToken = default)
+
+        public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default) where TEvent : class
         {
-           return _mediator.Publish(new CommandCancelledEvent<TKey>(commandId) , cancellationToken);//broadcast burada başlar
-          
+            await _mediator.Publish(@event, cancellationToken);
         }
     }
-}
+    }
+

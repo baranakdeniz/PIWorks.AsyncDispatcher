@@ -34,6 +34,7 @@ namespace PIWorks.AsyncDispatcher.WebApi.Controllers
             try
             {
               await _dispatcher.CancelAsync(id, cancellationToken);
+                
            
                return Accepted(new { Message = $"Command with ID {id} is being cancelled." });
             }
@@ -41,8 +42,16 @@ namespace PIWorks.AsyncDispatcher.WebApi.Controllers
             {
                 return NotFound(new { Message = $"Command with ID {id} not found." });
             }
-
+            catch (InvalidOperationException ex)
+            {
+                // 409 Conflict veya 400 Bad Request
+                return Conflict(new { Message = ex.Message });
             }
+
+
+        }
+
+            
 
         [HttpGet("running-count")]
         public async Task<IActionResult> GetRunningCount()

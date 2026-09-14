@@ -16,11 +16,11 @@ namespace PIWorks.AsyncDispatcher.Core
        
             services.AddSingleton<ICommandCancellationManager<TKey>, CommandCancellationManager<TKey>>();
 
-            services.AddTransient<INotificationHandler<CommandCancelledEvent<TKey>>, CommandCancellationEventConsumer<TKey>>();
+            //services.AddTransient<INotificationHandler<CommandCancelledEvent<TKey>>, CancelCommandRequestedEventConsumer<TKey>>();
                                                                                                                                
         
 
-            services.AddTransient<ICommandEventPublisher<TKey>, MediatRCommandEventPublisher<TKey>>();
+            //services.AddTransient<ICommandEventPublisher<TKey>, MediatRCommandEventPublisher<TKey>>();
 
           
             services.AddSingleton<ICommandTracker<TKey>, InMemoryCommandTracker<TKey>>();

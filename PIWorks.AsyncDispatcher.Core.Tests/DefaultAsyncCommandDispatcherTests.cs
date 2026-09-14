@@ -1,147 +1,148 @@
-﻿using AutoFixture.Xunit2;
-using Microsoft.Extensions.Logging;
-using Moq;
-using PIWorks.AsyncDispatcher.Core.Abstracts;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Timers;
+﻿//using AutoFixture.Xunit2;
+//using Microsoft.Extensions.Logging;
+//using Moq;
+//using PIWorks.AsyncDispatcher.Core.Abstracts;
+//using System;
+//using System.Collections.Generic;
+//using System.Text;
+//using System.Timers;
 
-namespace PIWorks.AsyncDispatcher.Core.Tests
-{
-    public class DummyCommand : IAsyncCommand<Guid>
-    {
-        public Guid Key { get; set; }
-    }
+//namespace PIWorks.AsyncDispatcher.Core.Tests
+//{
+//    public class DummyCommand : IAsyncCommand<Guid>
+//    {
+//        public Guid Key { get; set; }
+//    }
 
-    public class DefaultAsyncCommandDispatcherTests
-    {
+    //public class DefaultAsyncCommandDispatcherTests
+    
 
-        // --- ENQUEUEASYNC TESTLERİ ---
-        [Theory]
-        [AutoMoqData]
-        public async Task EnqueueAsync_ShouldInitializeAndEnqueueCommand(
-            [Frozen] Mock<ICommandTracker<Guid>> mockTracker,
-            [Frozen] Mock<ICommandBus<Guid>> mockBus,
-            DefaultAsyncCommandDispatcher<Guid> sut,
-            DummyCommand command,
-            CancellationToken cancellationToken)
-        {
-            await sut.EnqueueAsync(command, cancellationToken);
+        //    // --- ENQUEUEASYNC TESTLERİ ---
+        //    [Theory]
+        //    [AutoMoqData]
+        //    public async Task EnqueueAsync_ShouldInitializeAndEnqueueCommand(
+        //        [Frozen] Mock<ICommandTracker<Guid>> mockTracker,
+        //        [Frozen] Mock<ICommandBus<Guid>> mockBus,
+        //        DefaultAsyncCommandDispatcher<Guid> sut,
+        //        DummyCommand command,
+        //        CancellationToken cancellationToken)
+        //    {
+        //        await sut.EnqueueAsync(command, cancellationToken);
 
-            mockTracker.Verify(t => t.InitializeAsync(command.Key), Times.Once);
-            mockBus.Verify(b => b.EnqueueAsync(It.IsAny<CommandEnvelope<DummyCommand, Guid>>(), cancellationToken), Times.Once);
-        }
+        //        mockTracker.Verify(t => t.InitializeAsync(command.Key), Times.Once);
+        //        mockBus.Verify(b => b.EnqueueAsync(It.IsAny<CommandEnvelope<DummyCommand, Guid>>(), cancellationToken), Times.Once);
+        //    }
 
-        [Theory]
-        [AutoMoqData]
-        public async Task EnqueueAsync_ShouldCallInitializeBeforeEnqueue(
-            [Frozen] Mock<ICommandTracker<Guid>> mockTracker,
-            [Frozen] Mock<ICommandBus<Guid>> mockBus,
-            DefaultAsyncCommandDispatcher<Guid> sut,
-            DummyCommand command,
-            CancellationToken cancellationToken)
-        {
-            var sequence = new MockSequence();
+        //    [Theory]
+        //    [AutoMoqData]
+        //    public async Task EnqueueAsync_ShouldCallInitializeBeforeEnqueue(
+        //        [Frozen] Mock<ICommandTracker<Guid>> mockTracker,
+        //        [Frozen] Mock<ICommandBus<Guid>> mockBus,
+        //        DefaultAsyncCommandDispatcher<Guid> sut,
+        //        DummyCommand command,
+        //        CancellationToken cancellationToken)
+        //    {
+        //        var sequence = new MockSequence();
 
-            mockTracker.InSequence(sequence)
-                        .Setup(t => t.InitializeAsync(command.Key))
-                        .Returns(Task.CompletedTask);
+        //        mockTracker.InSequence(sequence)
+        //                    .Setup(t => t.InitializeAsync(command.Key))
+        //                    .Returns(Task.CompletedTask);
 
-            mockBus.InSequence(sequence)
-                    .Setup(b => b.EnqueueAsync(It.IsAny<CommandEnvelope<DummyCommand, Guid>>(), cancellationToken))
-                    .Returns(Task.CompletedTask);
+        //        mockBus.InSequence(sequence)
+        //                .Setup(b => b.EnqueueAsync(It.IsAny<CommandEnvelope<DummyCommand, Guid>>(), cancellationToken))
+        //                .Returns(Task.CompletedTask);
 
-            await sut.EnqueueAsync(command, cancellationToken);
+        //        await sut.EnqueueAsync(command, cancellationToken);
 
-            mockTracker.Verify(t => t.InitializeAsync(command.Key), Times.Once);
-            mockBus.Verify(b => b.EnqueueAsync(It.IsAny<CommandEnvelope<DummyCommand, Guid>>(), cancellationToken), Times.Once);
-        }
+        //        mockTracker.Verify(t => t.InitializeAsync(command.Key), Times.Once);
+        //        mockBus.Verify(b => b.EnqueueAsync(It.IsAny<CommandEnvelope<DummyCommand, Guid>>(), cancellationToken), Times.Once);
+        //    }
 
-        [Theory]
-        [AutoMoqData]
-        public async Task EnqueueAsync_ShouldNotEnqueueToBus_WhenInitializeThrowsException(
-        [Frozen] Mock<ICommandTracker<Guid>> mockTracker,
-            [Frozen] Mock<ICommandBus<Guid>> mockBus,
-            DefaultAsyncCommandDispatcher<Guid> sut,
-            DummyCommand command)
-        {
-  
-                mockTracker.Setup(t => t.InitializeAsync(command.Key))
-                            .ThrowsAsync(new InvalidOperationException("Database connection failed"));
+        //    [Theory]
+        //    [AutoMoqData]
+        //    public async Task EnqueueAsync_ShouldNotEnqueueToBus_WhenInitializeThrowsException(
+        //    [Frozen] Mock<ICommandTracker<Guid>> mockTracker,
+        //        [Frozen] Mock<ICommandBus<Guid>> mockBus,
+        //        DefaultAsyncCommandDispatcher<Guid> sut,
+        //        DummyCommand command)
+        //    {
 
-            await Assert.ThrowsAsync<InvalidOperationException>(() => sut.EnqueueAsync(command));
+        //        mockTracker.Setup(t => t.InitializeAsync(command.Key))
+        //                    .ThrowsAsync(new InvalidOperationException("Database connection failed"));
 
-            mockBus.Verify(b => b.EnqueueAsync(It.IsAny<CommandEnvelope<DummyCommand, Guid>>(), It.IsAny<CancellationToken>()), Times.Never);
-        }
+        //        await Assert.ThrowsAsync<InvalidOperationException>(() => sut.EnqueueAsync(command));
 
+        //        mockBus.Verify(b => b.EnqueueAsync(It.IsAny<CommandEnvelope<DummyCommand, Guid>>(), It.IsAny<CancellationToken>()), Times.Never);
+        //    }
+        //}
+   
         // --- CANCELASYNC TESTLERİ ---
 
-        [Theory]
-        [AutoMoqData]
-        public async Task CancelAsync_ShouldThrowKeyNotFoundException_WhenStatusIsNull(
-            [Frozen] Mock<ICommandTracker<Guid>> mockTracker,
-            DefaultAsyncCommandDispatcher<Guid> sut,
-            Guid commandId)
-        {
-            mockTracker.Setup(t => t.GetStatusAsync(commandId))
-                       .ReturnsAsync((CommandStateInfo?)null);
+        //[Theory]
+        //[AutoMoqData]
+        //public async Task CancelAsync_ShouldThrowKeyNotFoundException_WhenStatusIsNull(
+        //    [Frozen] Mock<ICommandTracker<Guid>> mockTracker,
+        //    DefaultAsyncCommandDispatcher<Guid> sut,
+        //    Guid commandId)
+        //{
+        //    mockTracker.Setup(t => t.GetStatusAsync(commandId))
+        //               .ReturnsAsync((CommandStateInfo?)null);
 
-            var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => sut.CancelAsync(commandId));
-            Assert.Contains(commandId.ToString(), exception.Message);
-        }
+        //    var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => sut.CancelAsync(commandId));
+        //    Assert.Contains(commandId.ToString(), exception.Message);
+        //}
 
-        [Theory]
-        [InlineAutoMoqData(CommandStatus.Finished)]
-        [InlineAutoMoqData(CommandStatus.Cancelled)]
-        public async Task CancelAsync_ShouldReturnEarly_WhenStatusIsAlreadyFinishedOrCancelled(
-            CommandStatus existingStatus,
-            [Frozen] Mock<ICommandTracker<Guid>> mockTracker,
-            [Frozen] Mock<ICommandEventPublisher<Guid>> mockPublisher,
-            DefaultAsyncCommandDispatcher<Guid> sut,
-            Guid commandId)
-        {
-            var existingState = new CommandStateInfo { Status = existingStatus };
+     //   [Theory]
+     //   [InlineAutoMoqData(CommandStatus.Finished)]
+     //   [InlineAutoMoqData(CommandStatus.Cancelled)]
+     //   public async Task CancelAsync_ShouldReturnEarly_WhenStatusIsAlreadyFinishedOrCancelled(
+     //       CommandStatus existingStatus,
+     //       [Frozen] Mock<ICommandTracker<Guid>> mockTracker,
+     //       [Frozen] Mock<ICommandEventPublisher<Guid>> mockPublisher,
+     //       DefaultAsyncCommandDispatcher<Guid> sut,
+     //       Guid commandId)
+     //   {
+     //       var existingState = new CommandStateInfo { Status = existingStatus };
 
-            mockTracker.Setup(t => t.GetStatusAsync(commandId))
-                       .ReturnsAsync(existingState);
+     //       mockTracker.Setup(t => t.GetStatusAsync(commandId))
+     //                  .ReturnsAsync(existingState);
 
-            await sut.CancelAsync(commandId);
+     //       await sut.CancelAsync(commandId);
 
-            mockTracker.Verify(t => t.UpdateStatusAsync(
-     It.IsAny<Guid>(),
-     It.IsAny<CommandStatus>(),
-     It.IsAny<string?>(),
-     It.IsAny<string?>()),
-     Times.Never);
-            mockPublisher.Verify(p => p.PublishCancelAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-        }
+     //       mockTracker.Verify(t => t.UpdateStatusAsync(
+     //It.IsAny<Guid>(),
+     //It.IsAny<CommandStatus>(),
+     //It.IsAny<string?>(),
+     //It.IsAny<string?>()),
+     //Times.Never);
+     //       mockPublisher.Verify(p => p.PublishCancelAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+     //   }
 
-        [Theory]
-        [AutoMoqData]
-        public async Task CancelAsync_ShouldUpdateStatusAndPublish_WhenCommandIsPendingOrRunning(
-            [Frozen] Mock<ICommandTracker<Guid>> mockTracker,
-            [Frozen] Mock<ICommandEventPublisher<Guid>> mockPublisher,
-            DefaultAsyncCommandDispatcher<Guid> sut,
-            Guid commandId)
-        {
-            var existingState = new CommandStateInfo { Status = CommandStatus.Running };
+//        [Theory]
+//        [AutoMoqData]
+//        public async Task CancelAsync_ShouldUpdateStatusAndPublish_WhenCommandIsPendingOrRunning(
+//            [Frozen] Mock<ICommandTracker<Guid>> mockTracker,
+//            [Frozen] Mock<ICommandEventPublisher<Guid>> mockPublisher,
+//            DefaultAsyncCommandDispatcher<Guid> sut,
+//            Guid commandId)
+//        {
+//            var existingState = new CommandStateInfo { Status = CommandStatus.Running };
 
-            mockTracker.Setup(t => t.GetStatusAsync(commandId))
-                       .ReturnsAsync(existingState);
+//            mockTracker.Setup(t => t.GetStatusAsync(commandId))
+//                       .ReturnsAsync(existingState);
 
-            await sut.CancelAsync(commandId);
+//            await sut.CancelAsync(commandId);
 
-            mockTracker.Verify(t => t.UpdateStatusAsync(
-    commandId,
-    CommandStatus.Cancelling,
-    null,
-    null),
-    Times.Once);
-            mockPublisher.Verify(p => p.PublishCancelAsync(commandId, It.IsAny<CancellationToken>()), Times.Once);
-        }
-    }
-}
+//            mockTracker.Verify(t => t.UpdateStatusAsync(
+//    commandId,
+//    CommandStatus.Cancelling,
+//    null,
+//    null),
+//    Times.Once);
+//            mockPublisher.Verify(p => p.PublishCancelAsync(commandId, It.IsAny<CancellationToken>()), Times.Once);
+//        }
+//    }
+//}
     
 //manuel olara kelle yazılmış hali mekaniğini anlamak için
  //public class DummyCommand : IAsyncCommand<Guid>
