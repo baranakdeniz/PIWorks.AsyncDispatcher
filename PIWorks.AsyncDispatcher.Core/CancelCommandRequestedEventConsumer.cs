@@ -1,6 +1,8 @@
 ﻿using MediatR;
+using Microsoft.Extensions.Options;
 using PIWorks.AsyncDispatcher.Core.Abstracts;
 using PIWorks.AsyncDispatcher.Core.Events;
+using PIWorks.AsyncDispatcher.Core.Options;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,11 +13,13 @@ namespace PIWorks.AsyncDispatcher.Core
     {
         private readonly ICommandCancellationManager<TKey> _commandCancellationManager;
         private readonly ICommandTracker<TKey> _commandTracker;
-        private readonly string _currentAppName = "ProductA";
-        public CancelCommandRequestedEventConsumer(ICommandCancellationManager<TKey> commandCancellationManager, ICommandTracker<TKey> commandTracker)
+        private readonly string _currentAppName;
+        public CancelCommandRequestedEventConsumer(ICommandCancellationManager<TKey> commandCancellationManager, ICommandTracker<TKey> commandTracker, IOptions<AsyncDispatcherOptions> options)
         {
             _commandCancellationManager = commandCancellationManager;
             _commandTracker = commandTracker;
+            _currentAppName = options.Value.AppName;
+           
         }
         public async Task Handle(CancelCommandRequestedEvent<TKey> notification, CancellationToken cancellationToken)
         {

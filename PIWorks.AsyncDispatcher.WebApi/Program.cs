@@ -3,6 +3,7 @@ using PIWorks.AsyncDispatcher.Core.Abstracts;
 using PIWorks.AsyncDispatcher.WebApi.CommandHandlers;
 using PIWorks.AsyncDispatcher.WebApi.Commands;
 using static PIWorks.AsyncDispatcher.Core.ServiceCollectionExtensions;
+using PIWorks.AsyncDispatcher.Core;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -12,6 +13,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+
+
+builder.Services.AddAsyncCommandDispatcher<Guid>(options =>
+{
+    options.AppName = "ReportService"; 
+});
+
 
 builder.Services.AddAsyncCommandDispatcher<Guid>();
 builder.Services.AddTransient<IAsyncCommandHandler<GenerateReportCommand, Guid>, GenerateReportCommandHandler>();

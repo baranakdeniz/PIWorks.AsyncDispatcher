@@ -1,8 +1,11 @@
 ﻿using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using PIWorks.AsyncDispatcher.Core.Abstracts;
 using PIWorks.AsyncDispatcher.Core.Events;
+using PIWorks.AsyncDispatcher.Core.Options;
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,10 +14,19 @@ namespace PIWorks.AsyncDispatcher.Core
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddAsyncCommandDispatcher<TKey>(this IServiceCollection services)
+        public static IServiceCollection AddAsyncCommandDispatcher<TKey>(this IServiceCollection services, Action<AsyncDispatcherOptions>? configureOptions = null)
         {
+            var options = new AsyncDispatcherOptions();
+            if (configureOptions != null)
+            {
+                configureOptions(options);
+                services.Configure(configureOptions);
+            }
+            else
+            {
+                services.AddOptions<AsyncDispatcherOptions>();
+            }
 
-           
             services.AddSingleton<ICommandCancellationManager<TKey>, CommandCancellationManager<TKey>>();
             services.AddSingleton<ICommandTracker<TKey>, InMemoryCommandTracker<TKey>>();
 

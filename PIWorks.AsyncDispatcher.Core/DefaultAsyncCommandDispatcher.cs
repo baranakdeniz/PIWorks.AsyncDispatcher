@@ -1,7 +1,9 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PIWorks.AsyncDispatcher.Core.Abstracts;
 using PIWorks.AsyncDispatcher.Core.Events;
+using PIWorks.AsyncDispatcher.Core.Options;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,17 +15,17 @@ namespace PIWorks.AsyncDispatcher.Core
         private readonly ICommandBus<TKey> _commandBus;
         private readonly ICommandTracker<TKey> _commandTracker;
         private readonly ICommandEventPublisher _eventPublisher;
-        private readonly string _appName;//??
+        private readonly string _appName;
         private readonly ILogger<DefaultAsyncCommandDispatcher<TKey>> _logger;
       
 
-        public DefaultAsyncCommandDispatcher(ICommandBus<TKey> commandBus, ICommandTracker<TKey> commandTracker, ICommandEventPublisher eventPublisher, ILogger<DefaultAsyncCommandDispatcher<TKey>> logger)
+        public DefaultAsyncCommandDispatcher(ICommandBus<TKey> commandBus, ICommandTracker<TKey> commandTracker, ICommandEventPublisher eventPublisher, ILogger<DefaultAsyncCommandDispatcher<TKey>> logger,IOptions<AsyncDispatcherOptions> options)
         {
             _commandBus = commandBus;
             _commandTracker = commandTracker;
             _eventPublisher = eventPublisher;
             _logger = logger;
-            _appName = "ProductA";
+            _appName = options.Value.AppName;
         }  
         public virtual async Task EnqueueAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default) where TCommand : IAsyncCommand<TKey>
         {
@@ -50,7 +52,7 @@ namespace PIWorks.AsyncDispatcher.Core
             }
 
           
-            var cancelRequestedEvent = new CancelCommandRequestedEvent<TKey>(commandId, "ProductA");
+            var cancelRequestedEvent = new CancelCommandRequestedEvent<TKey>(commandId, _appName);
 
             await _eventPublisher.PublishAsync(cancelRequestedEvent, cancellationToken);
         }
