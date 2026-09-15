@@ -7,6 +7,6 @@ using System.Threading.Tasks;
 
 namespace PIWorks.AsyncDispatcher.Core.Events
 {
-    public record CancelCommandRequestedEvent<TKey>(TKey CommandId, string AppName) : ICommandStateEvent<TKey>;
+    public record CancelCommandRequestedEvent<TKey>(TKey CommandId) : ICommandStateEvent<TKey>;
     
 }

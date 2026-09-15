@@ -13,21 +13,17 @@ namespace PIWorks.AsyncDispatcher.Core
     {
         private readonly ICommandCancellationManager<TKey> _commandCancellationManager;
         private readonly ICommandTracker<TKey> _commandTracker;
-        private readonly string _currentAppName;
-        public CancelCommandRequestedEventConsumer(ICommandCancellationManager<TKey> commandCancellationManager, ICommandTracker<TKey> commandTracker, IOptions<AsyncDispatcherOptions> options)
+    
+        public CancelCommandRequestedEventConsumer(ICommandCancellationManager<TKey> commandCancellationManager, ICommandTracker<TKey> commandTracker)
         {
             _commandCancellationManager = commandCancellationManager;
             _commandTracker = commandTracker;
-            _currentAppName = options.Value.AppName;
+           
            
         }
         public async Task Handle(CancelCommandRequestedEvent<TKey> notification, CancellationToken cancellationToken)
         {
-            //gelen mesaj bizim projeye mi ait kontrolü?
-            if (notification.AppName != _currentAppName)
-            {
-                return;
-            }
+
             await _commandTracker.UpdateStatusAsync(notification.CommandId, CommandStatus.Cancelling,null);
           
             _commandCancellationManager.Cancel(notification.CommandId);

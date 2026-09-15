@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PIWorks.AsyncDispatcher.Core.Abstracts;
 using PIWorks.AsyncDispatcher.Core.Events;
@@ -19,8 +20,7 @@ namespace PIWorks.AsyncDispatcher.Core
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ICommandCancellationManager<TKey> _cancellationManager;
         private readonly ICommandEventPublisher _eventPublisher;
-        private readonly SemaphoreSlim semaphoreSlim = new SemaphoreSlim(5,5);
-        private readonly string _currentAppName;
+        private readonly ILogger<AsyncCommandWorker<TKey>> _logger;
         private readonly string _workerId = $"{Environment.MachineName}-{Guid.NewGuid().ToString().Substring(0, 6)}";
 
         public AsyncCommandWorker(ICommandBus<TKey> commandBus,
@@ -28,7 +28,7 @@ namespace PIWorks.AsyncDispatcher.Core
             ICommandCancellationManager<TKey> cancellationManager, 
             IServiceScopeFactory serviceScopeFactory , 
             ICommandEventPublisher eventpublisher,
-            IOptions<AsyncDispatcherOptions> options
+            ILogger<AsyncCommandWorker<TKey>> logger
             )
         {
             _commandBus = commandBus;
@@ -36,7 +36,7 @@ namespace PIWorks.AsyncDispatcher.Core
             _serviceScopeFactory = serviceScopeFactory;
             _cancellationManager = cancellationManager;
             _eventPublisher = eventpublisher;
-            _currentAppName = options.Value.AppName;
+            _logger = logger;
         }
 
 
@@ -45,8 +45,7 @@ namespace PIWorks.AsyncDispatcher.Core
             while (!stoppingToken.IsCancellationRequested)
             {
                
-                var envelope = await _commandBus.DequeueAsync(stoppingToken);
-               await semaphoreSlim.WaitAsync(stoppingToken);
+                var envelope = await _commandBus.DequeueAsync(stoppingToken);    
                 
                 //Fire and Forget Mechanism (Multithreadng)!!!!
                 _ = Task.Run(async () =>
@@ -54,29 +53,38 @@ namespace PIWorks.AsyncDispatcher.Core
 
                     using var scope = _serviceScopeFactory.CreateScope();
                     
-                    var jobToken = _cancellationManager.RegisterCommand(envelope.CommandId);
+                    var jobToken = _cancellationManager.GetToken(envelope.CommandId);
+                    using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(jobToken, stoppingToken);
                     try
                     {
-                        await _eventPublisher.PublishAsync(new CommandRunningEvent<TKey>(envelope.CommandId, _currentAppName, _workerId));
-                        await envelope.ExecuteAsync(scope.ServiceProvider, jobToken);
-                        await _eventPublisher.PublishAsync(new CommandFinishedEvent<TKey>(envelope.CommandId, _currentAppName, _workerId));
+                        await _eventPublisher.PublishAsync(new CommandRunningEvent<TKey>(envelope.CommandId, _workerId));
+                        await envelope.ExecuteAsync(scope.ServiceProvider, linkedCts.Token);
+                        await _eventPublisher.PublishAsync(new CommandFinishedEvent<TKey>(envelope.CommandId, _workerId));
                     }
                     catch (OperationCanceledException)
                     {
-
-                        await envelope.HandleCancellationAsync(scope.ServiceProvider);
-                        await _eventPublisher.PublishAsync(new CommandCancelledEvent<TKey>(envelope.CommandId, _currentAppName, _workerId));
+                        if (stoppingToken.IsCancellationRequested)
+                        {
+                            // 1. Sunucu kapanıyor! Bu işi kullanıcı iptal etmedi!!!
+                            // State'i 'Cancelled' yapmayıp log atıyoruz ve öyle bırakıyoruz (sunucu açılınca tekrar denenir veya Pending kalır bu durumda)
+                            _logger.LogWarning("Command {CommandId} host kapatıldığı için yarıda kesildi.", envelope.CommandId);
+                        }
+                        else
+                        {
+                            // 2. Gerçek kullanıcı iptali (jobToken tetiklendi)!!
+                            await envelope.HandleCancellationAsync(scope.ServiceProvider);
+                            await _eventPublisher.PublishAsync(new CommandCancelledEvent<TKey>(envelope.CommandId, _workerId));
+                        }
                     }
                     catch (Exception ex)
                     {
                         await envelope.HandleFailureAsync(scope.ServiceProvider, ex);
-                        await _eventPublisher.PublishAsync(new CommandErrorEvent<TKey>(envelope.CommandId, _currentAppName, _workerId, ex.Message));
+                        await _eventPublisher.PublishAsync(new CommandErrorEvent<TKey>(envelope.CommandId, _workerId, ex.Message));
                     }
                     finally
                     {
                         _cancellationManager.Remove(envelope.CommandId);
-                        semaphoreSlim.Release();
-
+     
                     }
                 }, stoppingToken);
                
@@ -85,11 +93,11 @@ namespace PIWorks.AsyncDispatcher.Core
             }
         }
 
-        public override void Dispose()
-        {
-            semaphoreSlim.Dispose();
-            base.Dispose();
-        }
+        //public override void dispose()
+        //{
+
+        //    base.dispose();
+        //}
     }
 }
 

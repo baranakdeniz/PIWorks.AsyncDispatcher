@@ -8,6 +8,8 @@ namespace PIWorks.AsyncDispatcher.Core.Abstracts
     {
         Task EnqueueAsync<TCommand>(TCommand command, CancellationToken cancellationToken) where TCommand : IAsyncCommand<TKey>;
 
+        Task<TResult> SendAsync<TCommand , TResult>(TCommand command, CancellationToken cancellationToken = default) where TCommand :ISyncCommand<TResult>;
+
         Task CancelAsync(TKey commandId, CancellationToken cancellationToken = default) ;
     }
 }

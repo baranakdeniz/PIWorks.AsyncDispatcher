@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace PIWorks.AsyncDispatcher.Core.Events
 {
-    public record CommandRunningEvent<TKey>(TKey CommandId, string AppName, string WorkerId) : ICommandStateEvent<TKey>;
+    public record CommandRunningEvent<TKey>(TKey CommandId,string WorkerId) : ICommandStateEvent<TKey>;
     
    
 }

@@ -14,15 +14,16 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
-
-builder.Services.AddAsyncCommandDispatcher<Guid>(options =>
-{
-    options.AppName = "ReportService"; 
-});
-
+builder.Services.AddAsyncCommandDispatcher<Guid>(
+    options =>
+    {
+        options.AppName = "ReportService";
+    },
+    assembliesToScan: new[] { typeof(Program).Assembly }
+);
 
 builder.Services.AddAsyncCommandDispatcher<Guid>();
-builder.Services.AddTransient<IAsyncCommandHandler<GenerateReportCommand, Guid>, GenerateReportCommandHandler>();
+
 builder.Services.AddEndpointsApiExplorer();
 var app = builder.Build();
 

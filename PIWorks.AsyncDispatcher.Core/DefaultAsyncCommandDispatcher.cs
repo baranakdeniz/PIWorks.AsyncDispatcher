@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PIWorks.AsyncDispatcher.Core.Abstracts;
@@ -15,23 +16,40 @@ namespace PIWorks.AsyncDispatcher.Core
         private readonly ICommandBus<TKey> _commandBus;
         private readonly ICommandTracker<TKey> _commandTracker;
         private readonly ICommandEventPublisher _eventPublisher;
-        private readonly string _appName;
+        private readonly ICommandCancellationManager<TKey> _commandCancellationManager;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<DefaultAsyncCommandDispatcher<TKey>> _logger;
       
 
-        public DefaultAsyncCommandDispatcher(ICommandBus<TKey> commandBus, ICommandTracker<TKey> commandTracker, ICommandEventPublisher eventPublisher, ILogger<DefaultAsyncCommandDispatcher<TKey>> logger,IOptions<AsyncDispatcherOptions> options)
+        public DefaultAsyncCommandDispatcher(ICommandBus<TKey> commandBus,
+            ICommandTracker<TKey> commandTracker,
+            ICommandEventPublisher eventPublisher,
+            ILogger<DefaultAsyncCommandDispatcher<TKey>> logger, 
+            ICommandCancellationManager<TKey> commandCancellationManager,
+            IServiceProvider serviceProvider
+            )
         {
             _commandBus = commandBus;
             _commandTracker = commandTracker;
             _eventPublisher = eventPublisher;
             _logger = logger;
-            _appName = options.Value.AppName;
+            _commandCancellationManager = commandCancellationManager;
+            _serviceProvider = serviceProvider;
         }  
         public virtual async Task EnqueueAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default) where TCommand : IAsyncCommand<TKey>
         {
             var envelope = new CommandEnvelope<TCommand, TKey>(command);
-            await _eventPublisher.PublishAsync(new CommandPendingEvent<TKey>(command.Key, _appName), cancellationToken);
+             _commandCancellationManager.RegisterCommand(envelope.CommandId);
+            //burada register etmek lazım cancellationtoken durumu için!!!!!!!
+            await _eventPublisher.PublishAsync(new CommandPendingEvent<TKey>(command.Key), cancellationToken);
             await _commandBus.EnqueueAsync(envelope, cancellationToken);
+            
+        }
+        //Senkron için!!!!
+          public virtual Task<TResult> SendAsync<TCommand ,TResult>(TCommand command, CancellationToken cancellationToken = default) where TCommand : ISyncCommand<TResult>
+        { var handler = _serviceProvider.GetRequiredService<ISyncCommandHandler<TCommand, TResult>>();
+           return handler.HandleAsync(command, cancellationToken);
+ 
         }
     
        
@@ -52,11 +70,12 @@ namespace PIWorks.AsyncDispatcher.Core
             }
 
           
-            var cancelRequestedEvent = new CancelCommandRequestedEvent<TKey>(commandId, _appName);
+            var cancelRequestedEvent = new CancelCommandRequestedEvent<TKey>(commandId);
 
             await _eventPublisher.PublishAsync(cancelRequestedEvent, cancellationToken);
         }
 
+      
     }
 
     

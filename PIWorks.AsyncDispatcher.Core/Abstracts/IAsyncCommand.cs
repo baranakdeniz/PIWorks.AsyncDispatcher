@@ -4,7 +4,7 @@ using System.Text;
 
 namespace PIWorks.AsyncDispatcher.Core.Abstracts
 {
-    public interface IAsyncCommand<out TKey>
+    public interface IAsyncCommand<out TKey> : ICommand
     {
         TKey Key { get; }
     }

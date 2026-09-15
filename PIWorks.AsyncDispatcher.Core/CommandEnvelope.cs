@@ -30,7 +30,7 @@ namespace PIWorks.AsyncDispatcher.Core
 
         public override async Task ExecuteAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken)
         {
-            
+           
             var handler = serviceProvider.GetRequiredService<IAsyncCommandHandler<TCommand, TKey>>();
             await handler.ExecuteAsync(Command, cancellationToken);
 

@@ -8,7 +8,9 @@ namespace PIWorks.AsyncDispatcher.Core.Abstracts
     {
         CancellationToken RegisterCommand(TKey commandId);
 
+        CancellationToken GetToken(TKey commandId);
         void Remove(TKey commandId);
+        
 
         bool Cancel(TKey commandId);
     }
