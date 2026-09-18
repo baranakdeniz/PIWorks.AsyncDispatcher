@@ -27,13 +27,13 @@ namespace PIWorks.AsyncDispatcher.WebApi.Controllers
 
             await _dispatcher.EnqueueAsync(command, cancellationToken);
 
-            return Ok(new { Message = "İş kuyruğa alındı!", CommandId = commandId });
+            return Ok(new { Message = "The job has enqueued!", CommandId = commandId });
         }
         [HttpPost("cancel-job/{id}")]
         public async Task<IActionResult> CancelJob(Guid id)
         {
             await _dispatcher.CancelAsync(id);
-            return Ok(new { Message = "İptal isteği gönderildi!", CommandId = id });
+            return Ok(new { Message = "Cancel request has sent!", CommandId = id });
         }
         //senkron komutumuz
         [HttpPost("calculate-sync")]

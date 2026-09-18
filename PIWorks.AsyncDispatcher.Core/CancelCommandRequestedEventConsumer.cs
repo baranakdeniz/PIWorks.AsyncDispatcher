@@ -1,5 +1,4 @@
-﻿using MediatR;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using PIWorks.AsyncDispatcher.Core.Abstracts;
 using PIWorks.AsyncDispatcher.Core.Events;
 using PIWorks.AsyncDispatcher.Core.Options;
@@ -9,7 +8,7 @@ using System.Text;
 
 namespace PIWorks.AsyncDispatcher.Core
 {
-    public class CancelCommandRequestedEventConsumer<TKey> : INotificationHandler<CancelCommandRequestedEvent<TKey>>
+    public class CancelCommandRequestedEventConsumer<TKey> : IDispatcherEventHandler<CancelCommandRequestedEvent<TKey>>
     {
         private readonly ICommandCancellationManager<TKey> _commandCancellationManager;
         private readonly ICommandTracker<TKey> _commandTracker;
@@ -21,13 +20,12 @@ namespace PIWorks.AsyncDispatcher.Core
            
            
         }
-        public async Task Handle(CancelCommandRequestedEvent<TKey> notification, CancellationToken cancellationToken)
+
+        public async Task HandleAsync(CancelCommandRequestedEvent<TKey> @event, CancellationToken cancellationToken = default)
         {
-
-            await _commandTracker.UpdateStatusAsync(notification.CommandId, CommandStatus.Cancelling,null);
+             await _commandTracker.UpdateStatusAsync(@event.CommandId, CommandStatus.Cancelling,null);
           
-            _commandCancellationManager.Cancel(notification.CommandId);
-
+            _commandCancellationManager.Cancel(@event.CommandId);
         }
     }
 }

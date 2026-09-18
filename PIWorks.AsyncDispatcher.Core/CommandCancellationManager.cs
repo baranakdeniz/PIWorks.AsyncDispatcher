@@ -21,14 +21,9 @@ namespace PIWorks.AsyncDispatcher.Core
         public CancellationToken GetToken(TKey commandId)
         {
 
-            if (_stores.TryGetValue(commandId, out var cts))
-            {
-                return cts.Token;
-            }
+            var cts = _stores.GetOrAdd(commandId, _ => new CancellationTokenSource());
+            return cts.Token;
 
-            return CancellationToken.None;
-
-            
         }
 
         public void Remove(TKey commandId)

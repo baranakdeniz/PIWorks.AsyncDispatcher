@@ -7,5 +7,5 @@ using System.Threading.Tasks;
 
 namespace PIWorks.AsyncDispatcher.Core.Events
 {
-    public record CommandErrorEvent<TKey>( TKey CommandId, string WorkerId, string ErrorMessage) : ICommandStateEvent<TKey>;
+    public record CommandErrorEvent<TKey>( TKey CommandId, string WorkerId, string ErrorMessage) : IDispatcherEvent;
 }

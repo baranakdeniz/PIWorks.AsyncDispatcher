@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -30,59 +30,53 @@ namespace PIWorks.AsyncDispatcher.Core
 
             services.AddSingleton<ICommandCancellationManager<TKey>, CommandCancellationManager<TKey>>();
             services.AddSingleton<ICommandTracker<TKey>, InMemoryCommandTracker<TKey>>();
+           
 
-
-            services.AddSingleton(typeof(ICommandBus<>), typeof(InMemoryCommandBus<>));
+            //services.AddSingleton(typeof(ICommandBus<>), typeof(InMemoryCommandBus<>));
             services.AddScoped<IAsyncCommandDispatcher<TKey>, DefaultAsyncCommandDispatcher<TKey>>();
+            services.AddScoped<IInternalEventPublisher, InternalEventPublisher>();
 
-
-            services.AddHostedService<AsyncCommandWorker<TKey>>();
+            //services.AddHostedService<AsyncCommandWorker<TKey>>();
             //handlerları birleştirmek mantıklı mı araştır?
 
-            services.AddMediatR(cfg =>
-            {
-                cfg.RegisterServicesFromAssemblyContaining<MediatRCommandEventPublisher>();
-                cfg.TypeEvaluator = type => !type.IsGenericTypeDefinition;
-            });
-
-            // Messaging YAPISI
-            services.AddTransient<ICommandEventPublisher, MediatRCommandEventPublisher>();
-
             // Consumer Kayıtları
-            services.AddTransient<INotificationHandler<CancelCommandRequestedEvent<TKey>>, CancelCommandRequestedEventConsumer<TKey>>();//bu notificationhandler nasıl kana karıştı burada? 
-            services.AddTransient<INotificationHandler<CommandPendingEvent<TKey>>, CommandStateEventConsumer<TKey>>();
-            services.AddTransient<INotificationHandler<CommandRunningEvent<TKey>>, CommandStateEventConsumer<TKey>>();
-            services.AddTransient<INotificationHandler<CommandFinishedEvent<TKey>>, CommandStateEventConsumer<TKey>>();
-            services.AddTransient<INotificationHandler<CommandErrorEvent<TKey>>, CommandStateEventConsumer<TKey>>();
-            services.AddTransient<INotificationHandler<CommandCancelledEvent<TKey>>, CommandStateEventConsumer<TKey>>();
+            services.AddTransient<IDispatcherEventHandler<CancelCommandRequestedEvent<TKey>>, CancelCommandRequestedEventConsumer<TKey>>();
+            services.AddTransient<IDispatcherEventHandler<CommandPendingEvent<TKey>>, CommandStateEventConsumer<TKey>>();
+            services.AddTransient<IDispatcherEventHandler<CommandRunningEvent<TKey>>, CommandStateEventConsumer<TKey>>();
+            services.AddTransient<IDispatcherEventHandler<CommandFinishedEvent<TKey>>, CommandStateEventConsumer<TKey>>();
+            services.AddTransient<IDispatcherEventHandler<CommandErrorEvent<TKey>>, CommandStateEventConsumer<TKey>>();
+            services.AddTransient<IDispatcherEventHandler<CommandCancelledEvent<TKey>>, CommandStateEventConsumer<TKey>>();
 
             var assemblies = assembliesToScan ?? new[] { Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly() };
             RegisterCommandHandlers(services, assemblies);
             return services;
         }
-         private static void RegisterCommandHandlers(IServiceCollection services, Assembly[] assemblies)
-        {//projeleri tek tek gez taranacak olanlar!
+        private static void RegisterCommandHandlers(IServiceCollection services, Assembly[] assemblies)
+        {
             foreach (var assembly in assemblies)
-            {//seçilen o projedeki bütün dosyaları bir yere topla
-                foreach (var type in assembly.GetTypes())
+            {
+                Type[] types;
+                try
                 {
-                    //elimizde interf veya abstractsa geç onlar newlenemez çünkü
+                    types = assembly.GetExportedTypes();
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    types = ex.Types.Where(t => t != null).ToArray()!;
+                }
+
+                foreach (var type in types)
+                {
                     if (type.IsAbstract || type.IsInterface) continue;
-                    //clas ın uyguladğı ifaceleri ve mirasları al
+
                     foreach (var iface in type.GetInterfaces())
-                    {//eğer miras generic değilse geç 
+                    {
                         if (!iface.IsGenericType) continue;
-                        // Bu <> nun içindeki tipleri söküp kalıbı alıyoruz.
+
                         var genericDef = iface.GetGenericTypeDefinition();
 
-                        // bu kalıp aradığımız senkron handler kalıbı mı?
-                        if (genericDef == typeof(ISyncCommandHandler<,>))
-                        {//evet o zmaan bu senkron kalıbıdır
-                            services.AddTransient(iface, type);
-                        }
-                        // veya bu kalıp aradığımız asnkeron handler kalıbı mı ? 
-                        else if (genericDef == typeof(IAsyncCommandHandler<,>))
-                        {//eveto zaman bu asenkron kalıbıdr..
+                        if (genericDef == typeof(ISyncCommandHandler<,>) || genericDef == typeof(IAsyncCommandHandler<,>))
+                        {
                             services.AddTransient(iface, type);
                         }
                     }

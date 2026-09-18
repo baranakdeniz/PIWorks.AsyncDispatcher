@@ -6,6 +6,7 @@ namespace PIWorks.AsyncDispatcher.Core.Tests
 {
     public class InMemoryCommandTrackerTests
     {
+ 
         [Fact]
         public async Task GetStatusAsync_ShouldReturnNull_WhenCommandIdDoesNotExist()
         {//Arrange
@@ -17,6 +18,15 @@ namespace PIWorks.AsyncDispatcher.Core.Tests
             Assert.Null(result);
 
         }
+        [Fact]
+        public async Task GetStatusAsync_ShouldReturnStatus_WhenCalled()
+        {
+            var commandId = Guid.NewGuid();
+            var sut = new InMemoryCommandTracker<Guid>();
+            var result= await sut.GetStatusAsync(commandId);
+            Assert.NotNull(result);
+        }
+
         [Fact]
         public async Task InitializeAsync_ShouldAddCommandStateInfo_WhenCalled()
         {

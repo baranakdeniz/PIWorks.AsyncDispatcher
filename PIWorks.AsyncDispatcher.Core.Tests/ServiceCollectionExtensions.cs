@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PIWorks.AsyncDispatcher.Core.Abstracts;
@@ -28,9 +28,9 @@ namespace PIWorks.AsyncDispatcher.Core
             services.AddScoped<IAsyncCommandDispatcher<TKey>, DefaultAsyncCommandDispatcher<TKey>>();
 
          
-            services.AddSingleton(typeof(ICommandBus<>), typeof(InMemoryCommandBus<>));
+            //services.AddSingleton(typeof(ICommandBus<>), typeof(InMemoryCommandBus<>));
            
-            services.AddHostedService<AsyncCommandWorker<TKey>>();
+            //services.AddHostedService<AsyncCommandWorker<TKey>>();
 
             return services;
         }

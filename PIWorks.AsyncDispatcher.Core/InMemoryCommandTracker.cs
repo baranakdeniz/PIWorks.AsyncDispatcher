@@ -12,7 +12,9 @@ namespace PIWorks.AsyncDispatcher.Core
         private readonly ConcurrentDictionary<TKey, CommandStateInfo> _states = new();
 
         public Task<CommandStateInfo?> GetStatusAsync(TKey commandId)
-        {
+        {//çağırıldığında status gelmeli notnull veya notemptyolmalı!
+            //eğer commandyoksa status false gelmeli?
+            
            if(_states.TryGetValue(commandId, out var state))
             {
                 return Task.FromResult<CommandStateInfo?>(state);
@@ -56,39 +58,6 @@ namespace PIWorks.AsyncDispatcher.Core
 
 
     }
-
-        //private readonly ConcurrentDictionary<TKey, CommandStateInfo> _store = new();
-
-
-        //public Task InitializeAsync(TKey commandId)
-        //{
-        //    var initialState = new CommandStateInfo
-        //    {
-        //        Status = CommandStatus.Pending
-        //    };
-        //    _store.TryAdd(commandId, initialState);
-        //    return Task.CompletedTask;
-        //}
-
-        //public Task UpdateStatusAsync(TKey commandId, CommandStatus status, string errorMessage)
-        //{
-        //    if (_store.TryGetValue(commandId, out var stateInfo)) 
-        //    {
-        //        stateInfo.Status = status;
-        //        stateInfo.ErrorMessage = errorMessage;
-
-        //    }
-        //    return Task.CompletedTask;
-        //} 
-        //public Task<CommandStateInfo> GetStatusAsync(TKey commandId)
-        //{
-        //    if (_store.TryGetValue(commandId, out var stateInfo));
-        //    {
-        //        return Task.FromResult(stateInfo);
-        //    }
-        //    return Task.FromResult<CommandStateInfo>(null);
-        //}
-
 
     }
 

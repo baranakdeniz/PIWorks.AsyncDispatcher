@@ -6,7 +6,7 @@ using System.Text;
 
 namespace PIWorks.AsyncDispatcher.Core
 {
-    public abstract class CommandEnvelope<TKey>
+    public abstract class CommandEnvelope<TKey> 
     {//double dispatch 1.dağıtım worker - > envelope
         public TKey CommandId { get; }
         protected CommandEnvelope(TKey commandId)

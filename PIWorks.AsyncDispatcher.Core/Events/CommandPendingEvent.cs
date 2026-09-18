@@ -8,5 +8,5 @@ using System.Threading.Tasks;
 namespace PIWorks.AsyncDispatcher.Core.Events
 {
     public record CommandPendingEvent<TKey>(
-    TKey CommandId) : ICommandStateEvent<TKey>;
+    TKey CommandId) : IDispatcherEvent;
 }

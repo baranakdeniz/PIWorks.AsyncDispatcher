@@ -14,6 +14,7 @@ namespace PIWorks.AsyncDispatcher.WebApi.CommandHandlers
 
         public async Task ExecuteAsync(LongRunningReportCommand command, CancellationToken cancellationToken)
         {
+
             _logger.LogInformation("---> Rapor başlatıldı:{ReportName} ID: {Id}", command.ReportName, command.Key);
             for (int i = 1; i <= 10; i++)
             {

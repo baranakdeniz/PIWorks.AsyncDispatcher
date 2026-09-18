@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -35,7 +35,7 @@ namespace PIWorks.AsyncDispatcher.Core
             _logger = logger;
             _commandCancellationManager = commandCancellationManager;
             _serviceProvider = serviceProvider;
-        }  
+        }
         public virtual async Task EnqueueAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default) where TCommand : IAsyncCommand<TKey>
         {
             var envelope = new CommandEnvelope<TCommand, TKey>(command);

@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace PIWorks.AsyncDispatcher.Core.Abstracts
 {
-    public interface ICommandStateEvent<TKey> : INotification
-    {
-        TKey CommandId { get; }
+    //public interface ICommandStateEvent<TKey> : INotification SİLİNECEEEEK!
+    //{
+    //    TKey CommandId { get; }
        
-    }
+    //}
 
 }
