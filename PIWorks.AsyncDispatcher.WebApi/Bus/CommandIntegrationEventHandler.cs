@@ -16,10 +16,10 @@ namespace PIWorks.AsyncDispatcher.WebApi.Bus
         private readonly IEventBus _eventBus;
         private readonly IInstanceInfo _instanceInfo;
 
-        // SENİN YAZDIĞIN KENDİ MINI-MEDIATR YAPIN
+        // Benim Yazdığım Mini-Mediatr Yapısı
         private readonly IInternalEventPublisher _internalPublisher;
 
-        // PERFORMANS ÇÖZÜMÜ: MakeGenericType Cache (Önbellek)
+        
         private static readonly ConcurrentDictionary<Type, Type> EnvelopeTypeCache = new();
 
         public CommandIntegrationEventHandler(
@@ -63,7 +63,7 @@ namespace PIWorks.AsyncDispatcher.WebApi.Bus
                 
                 await BroadcastStatusAsync(envelope.CommandId, "Running", workerId, token);
 
-                // İŞİ ÇALIŞTIR
+                // İŞİ ÇALIŞTIRMA BÖlGESİ!
                 await envelope.ExecuteAsync(scope.ServiceProvider, token);
 
                
