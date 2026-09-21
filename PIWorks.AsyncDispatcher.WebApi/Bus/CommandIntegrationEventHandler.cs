@@ -42,7 +42,7 @@ namespace PIWorks.AsyncDispatcher.WebApi.Bus
             var commandType = Type.GetType(@event.CommandTypeName)!;
             var command = JsonSerializer.Deserialize(@event.CommandPayloadJson, commandType);
 
-            // PERFORMANS: Tipi her seferinde üretmek yerine Cache'den alıyoruz!
+            // PERFORMANS: Tipi her seferinde üretmek yerine Cacheden alıyoruz
             var envelopeType = EnvelopeTypeCache.GetOrAdd(
                 commandType,
                 t => typeof(CommandEnvelope<,>).MakeGenericType(t, typeof(TKey))
@@ -52,7 +52,7 @@ namespace PIWorks.AsyncDispatcher.WebApi.Bus
             var token = _cancellationManager.GetToken(envelope.CommandId);
 
 
-            using var scope = _serviceProvider.CreateScope();
+          
             var workerId = _instanceInfo.WorkerId;
             Console.WriteLine($"[HANDLER] Çalışan Komut Id: {envelope.CommandId} | WorkerId: {workerId}");
             try
@@ -64,7 +64,7 @@ namespace PIWorks.AsyncDispatcher.WebApi.Bus
                 await BroadcastStatusAsync(envelope.CommandId, "Running", workerId, token);
 
                 // İŞİ ÇALIŞTIRMA BÖlGESİ!
-                await envelope.ExecuteAsync(scope.ServiceProvider, token);
+                await envelope.ExecuteAsync(_serviceProvider, token);
 
                
                 await _internalPublisher.PublishAsync(new CommandFinishedEvent<TKey>(envelope.CommandId, workerId), token);
@@ -72,7 +72,7 @@ namespace PIWorks.AsyncDispatcher.WebApi.Bus
             }
             catch (OperationCanceledException)
             {
-                await envelope.HandleCancellationAsync(scope.ServiceProvider);
+                await envelope.HandleCancellationAsync(_serviceProvider);
 
              
                 await _internalPublisher.PublishAsync(new CommandCancelledEvent<TKey>(envelope.CommandId, workerId), CancellationToken.None);
@@ -80,7 +80,7 @@ namespace PIWorks.AsyncDispatcher.WebApi.Bus
             }
             catch (Exception ex)
             {
-                await envelope.HandleFailureAsync(scope.ServiceProvider, ex);
+                await envelope.HandleFailureAsync(_serviceProvider, ex);
 
                 await _internalPublisher.PublishAsync(new CommandErrorEvent<TKey>(envelope.CommandId, workerId, ex.Message), CancellationToken.None);
                 await BroadcastStatusAsync(envelope.CommandId, "Failed", workerId, CancellationToken.None, ex.Message);

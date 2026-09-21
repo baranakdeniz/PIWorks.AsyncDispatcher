@@ -11,6 +11,7 @@ using System.Text;
 
 namespace PIWorks.AsyncDispatcher.Core
 {
+
     public class DefaultAsyncCommandDispatcher<TKey> : IAsyncCommandDispatcher<TKey>
     {
         private readonly ICommandBus<TKey> _commandBus;
@@ -19,14 +20,16 @@ namespace PIWorks.AsyncDispatcher.Core
         private readonly ICommandCancellationManager<TKey> _commandCancellationManager;
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<DefaultAsyncCommandDispatcher<TKey>> _logger;
-      
+        private readonly IDistributedMessagePublisher<TKey> _messagePublisher;
+
 
         public DefaultAsyncCommandDispatcher(ICommandBus<TKey> commandBus,
             ICommandTracker<TKey> commandTracker,
             ICommandEventPublisher eventPublisher,
             ILogger<DefaultAsyncCommandDispatcher<TKey>> logger, 
             ICommandCancellationManager<TKey> commandCancellationManager,
-            IServiceProvider serviceProvider
+            IServiceProvider serviceProvider,
+            IDistributedMessagePublisher<TKey> messagePublisher
             )
         {
             _commandBus = commandBus;
@@ -35,6 +38,7 @@ namespace PIWorks.AsyncDispatcher.Core
             _logger = logger;
             _commandCancellationManager = commandCancellationManager;
             _serviceProvider = serviceProvider;
+            _messagePublisher = messagePublisher;
         }
         public virtual async Task EnqueueAsync<TCommand>(TCommand command, CancellationToken cancellationToken = default) where TCommand : IAsyncCommand<TKey>
         {
@@ -51,11 +55,17 @@ namespace PIWorks.AsyncDispatcher.Core
            return handler.HandleAsync(command, cancellationToken);
  
         }
-    
-       
-  
+
             public virtual async Task CancelAsync(TKey commandId, CancellationToken cancellationToken = default)
-        {
+        {// 1. ADIM: Önce bu makinede mi çalışıyor diye bak.
+         // Eğer iş bu makinedeyse lokalde CancellationToken'ı patlat ve hemen dön.
+            if (_commandCancellationManager.Cancel(commandId))
+            {
+                _logger.LogInformation("Command with ID {CommandId} was running locally and cancelled.", commandId);
+                return;
+            }
+
+            // 2. ADIM: Bu makinede değilse Tracker'dan kontrol et (Senin orijinal kodun)
             var status = await _commandTracker.GetStatusAsync(commandId);
             if (status == null)
             {
@@ -69,15 +79,23 @@ namespace PIWorks.AsyncDispatcher.Core
                 throw new InvalidOperationException($"Command with ID {commandId} is already {status.Value.Status}.");
             }
 
-          
-            var cancelRequestedEvent = new CancelCommandRequestedEvent<TKey>(commandId);
+            if (string.IsNullOrEmpty(status.Value.WorkerId))
+            {
+                _logger.LogWarning("WorkerId for Command with ID {CommandId} is unknown.", commandId);
+                throw new InvalidOperationException("Komutun hangi makinede olduğu henüz bilinemiyor.");
+            }
 
-            await _eventPublisher.PublishAsync(cancelRequestedEvent, cancellationToken);
+            // 3. ADIM: Hedef makineyi bulduk! Ağ üzerinden iptal emri fırlatıyoruz.
+            // (RabbitMQ'yu doğrudan vermiyoruz, saf bir publisher arayüzü çağırıyoruz)
+            await _messagePublisher.SendCancelCommandRequestAsync(commandId, status.Value.WorkerId, cancellationToken);
+
+            _logger.LogInformation("Cancel request for Command {CommandId} sent to Worker {WorkerId}.", commandId, status.Value.WorkerId);
         }
+    }
 
       
     }
 
     
     
-}
+
