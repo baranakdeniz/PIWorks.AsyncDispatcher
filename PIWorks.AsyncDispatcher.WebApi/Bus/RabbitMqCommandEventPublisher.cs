@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace PIWorks.AsyncDispatcher.WebApi.Bus
 {
-    public class RabbitMqCommandEventPublisher : ICommandEventPublisher//bunun gibi iptali de yapmam lazım iptal eventi!!!
+    public class RabbitMqCommandEventPublisher : ICommandEventPublisher
     {
         private readonly IEventBus _eventBus;
 

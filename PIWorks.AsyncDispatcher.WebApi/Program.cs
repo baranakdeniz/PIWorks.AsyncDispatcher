@@ -3,6 +3,7 @@ using EventBus.RabbitMQ.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using PIWorks.AsyncDispatcher.Core;
 using PIWorks.AsyncDispatcher.Core.Abstracts;
+using PIWorks.AsyncDispatcher.Core.Configuration;
 using PIWorks.AsyncDispatcher.WebApi.Bus;
 using PIWorks.AsyncDispatcher.WebApi.CommandHandlers;
 using PIWorks.AsyncDispatcher.WebApi.Commands;
@@ -39,6 +40,16 @@ builder.Services.AddTransient<CommandIntegrationEventHandler<Guid>>();
 builder.Services.AddSingleton<IInstanceInfo, DefaultInstanceInfo>();
 builder.Services.AddTransient<CommandStatusChangedIntegrationEventHandler>();
 builder.Services.AddTransient<CancelCommandRequestedIntegrationEventHandler>();
+
+builder.Services.AddScoped<IDistributedMessagePublisher<Guid>, RabbitMqMessagePublisherAdapter>();
+
+
+
+builder.Services.AddOptions<AsyncDispatcherOptions>()
+    .Bind(builder.Configuration.GetSection(AsyncDispatcherOptions.SectionName))
+    .ValidateDataAnnotations();
+
+
 builder.Services.AddEndpointsApiExplorer();
 var app = builder.Build();
 

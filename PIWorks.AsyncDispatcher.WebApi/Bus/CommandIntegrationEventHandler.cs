@@ -15,6 +15,7 @@ namespace PIWorks.AsyncDispatcher.WebApi.Bus
         private readonly ICommandCancellationManager<TKey> _cancellationManager;
         private readonly IEventBus _eventBus;
         private readonly IInstanceInfo _instanceInfo;
+        ILogger<CommandIntegrationEventHandler<TKey>> _logger;
 
         // Benim Yazdığım Mini-Mediatr Yapısı
         private readonly IInternalEventPublisher _internalPublisher;
@@ -27,22 +28,24 @@ namespace PIWorks.AsyncDispatcher.WebApi.Bus
             ICommandCancellationManager<TKey> cancellationManager,
             IEventBus eventBus,
             IInstanceInfo instanceInfo,
-            IInternalEventPublisher internalPublisher)
+            IInternalEventPublisher internalPublisher,
+            ILogger<CommandIntegrationEventHandler<TKey>> logger)
         {
             _serviceProvider = serviceProvider;
             _cancellationManager = cancellationManager;
             _eventBus = eventBus;
             _instanceInfo = instanceInfo;
             _internalPublisher = internalPublisher;
+            _logger = logger;
         }
 
         public async Task HandleAsync(CommandIntegrationEvent @event, CancellationToken cancellationToken)
         {
-            // Tipi bul
+            
             var commandType = Type.GetType(@event.CommandTypeName)!;
             var command = JsonSerializer.Deserialize(@event.CommandPayloadJson, commandType);
 
-            // PERFORMANS: Tipi her seferinde üretmek yerine Cacheden alıyoruz
+            //Tipi her seferinde üretmek yerine Cacheden alıyoruz
             var envelopeType = EnvelopeTypeCache.GetOrAdd(
                 commandType,
                 t => typeof(CommandEnvelope<,>).MakeGenericType(t, typeof(TKey))
@@ -54,7 +57,7 @@ namespace PIWorks.AsyncDispatcher.WebApi.Bus
 
           
             var workerId = _instanceInfo.WorkerId;
-            Console.WriteLine($"[HANDLER] Çalışan Komut Id: {envelope.CommandId} | WorkerId: {workerId}");
+            _logger.LogInformation($"[HANDLER] Running Command Id: {envelope.CommandId} | WorkerId: {workerId}");
             try
             {
              
@@ -75,7 +78,7 @@ namespace PIWorks.AsyncDispatcher.WebApi.Bus
                 await envelope.HandleCancellationAsync(_serviceProvider);
 
              
-                await _internalPublisher.PublishAsync(new CommandCancelledEvent<TKey>(envelope.CommandId, workerId), CancellationToken.None);
+             //   await _internalPublisher.PublishAsync(new CommandCancelledEvent<TKey>(envelope.CommandId, workerId), CancellationToken.None);
                 await BroadcastStatusAsync(envelope.CommandId, "Cancelled", workerId, CancellationToken.None);
             }
             catch (Exception ex)
@@ -91,7 +94,6 @@ namespace PIWorks.AsyncDispatcher.WebApi.Bus
             }
         }
 
-        // RabbitMQ'ya basan yardımcı metot
         private async Task BroadcastStatusAsync(TKey commandId, string status, string workerId, CancellationToken cancellationToken, string? error = null)
         {
             if (commandId is Guid id)

@@ -44,12 +44,11 @@ namespace PIWorks.AsyncDispatcher.Core
         {
             var envelope = new CommandEnvelope<TCommand, TKey>(command);
              _commandCancellationManager.RegisterCommand(envelope.CommandId);
-            //burada register etmek lazım cancellationtoken durumu için!!!!!!!
-            await _eventPublisher.PublishAsync(new CommandPendingEvent<TKey>(command.Key), cancellationToken);
+
             await _commandBus.EnqueueAsync(envelope, cancellationToken);
             
         }
-        //Senkron için!!!!
+     
           public virtual Task<TResult> SendAsync<TCommand ,TResult>(TCommand command, CancellationToken cancellationToken = default) where TCommand : ISyncCommand<TResult>
         { var handler = _serviceProvider.GetRequiredService<ISyncCommandHandler<TCommand, TResult>>();
            return handler.HandleAsync(command, cancellationToken);
@@ -65,10 +64,10 @@ namespace PIWorks.AsyncDispatcher.Core
                 return;
             }
 
-            // 2. ADIM: Bu makinede değilse Tracker'dan kontrol et (Senin orijinal kodun)
+            // 2. ADIM: Bu makinede değilse Tracker'dan kontrol et 
             var status = await _commandTracker.GetStatusAsync(commandId);
             if (status == null)
-            {
+            {//no need it!
                 _logger.LogWarning("Command with ID {CommandId} not found.", commandId);
                 throw new KeyNotFoundException($"Command with ID {commandId} not found.");
             }
@@ -85,7 +84,7 @@ namespace PIWorks.AsyncDispatcher.Core
                 throw new InvalidOperationException("Komutun hangi makinede olduğu henüz bilinemiyor.");
             }
 
-            // 3. ADIM: Hedef makineyi bulduk! Ağ üzerinden iptal emri fırlatıyoruz.
+            //  Hedef makineyi bulduk! Ağ üzerinden iptal emri fırlatıyoruz.
             // (RabbitMQ'yu doğrudan vermiyoruz, saf bir publisher arayüzü çağırıyoruz)
             await _messagePublisher.SendCancelCommandRequestAsync(commandId, status.Value.WorkerId, cancellationToken);
 

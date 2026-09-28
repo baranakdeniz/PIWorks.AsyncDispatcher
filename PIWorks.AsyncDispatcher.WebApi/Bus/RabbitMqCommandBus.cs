@@ -33,7 +33,7 @@ namespace PIWorks.AsyncDispatcher.WebApi.Bus
         }
         public Task<CommandEnvelope<TKey>> DequeueAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotSupportedException("RabbitMQ push-based çalışır; DequeueAsync desteklenmez.");
+            throw new NotSupportedException("RabbitMQ works push-based. Does not support Dequeue.");
         }
     }
 }
